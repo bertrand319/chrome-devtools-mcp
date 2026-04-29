@@ -7,6 +7,8 @@
 import assert from 'node:assert';
 import {beforeEach, describe, it} from 'node:test';
 
+import type {Dialog} from 'puppeteer-core';
+
 import {emulate} from '../../src/tools/emulation.js';
 import {
   geolocationTransform,
@@ -678,6 +680,37 @@ describe('emulation', () => {
           initial,
         );
       });
+    });
+  });
+
+  it('when dialog is open', async t => {
+    await withMcpContext(async (response, context) => {
+      const page = context.getSelectedPptrPage();
+      await page.setContent('<h1>Test</h1>');
+      const dialogPromise = new Promise<Dialog>(resolve => {
+        page.on('dialog', dialog => resolve(dialog));
+      });
+      page.evaluate(() => {
+        alert('test dialog');
+      });
+      const dialog = await dialogPromise;
+
+      await assert.rejects(
+        emulate.handler(
+          {
+            params: {
+              userAgent: 'Test Agent',
+            },
+            page: context.getSelectedMcpPage(),
+          },
+          response,
+          context,
+        ),
+      );
+      const result = await response.handle('emulate', context);
+
+      t.assert.snapshot?.(JSON.stringify(result));
+      await dialog.dismiss();
     });
   });
 });

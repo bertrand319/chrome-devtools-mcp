@@ -1,0 +1,3 @@
+exports[`emulation > when dialog is open 1`] = `
+{"content":[{"type":"text","text":"# Open dialog\\nalert: test dialog.\\nCall handle_dialog to handle it before continuing."}],"structuredContent":{"dialog":{"type":"alert","message":"test dialog","defaultValue":""}}}
+`;

@@ -11,6 +11,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {describe, it} from 'node:test';
 
+import type {Dialog} from 'puppeteer-core';
+
 import {
   takeMemorySnapshot,
   exploreMemorySnapshot,
@@ -38,6 +40,34 @@ describe('memory', () => {
         } finally {
           await rm(filePath, {force: true});
         }
+      });
+    });
+
+    it('when dialog is open', async t => {
+      await withMcpContext(async (response, context) => {
+        const page = context.getSelectedPptrPage();
+        await page.setContent('<h1>Test</h1>');
+        const dialogPromise = new Promise<Dialog>(resolve => {
+          page.on('dialog', dialog => resolve(dialog));
+        });
+        page.evaluate(() => {
+          alert('test dialog');
+        });
+        const dialog = await dialogPromise;
+        const filePath = join(tmpdir(), 'test-dialog.heapsnapshot');
+
+        await assert.rejects(
+          takeMemorySnapshot.handler(
+            {params: {filePath}, page: context.getSelectedMcpPage()},
+            response,
+            context,
+          ),
+        );
+        await rm(filePath, {force: true});
+        const result = await response.handle('take_memory_snapshot', context);
+
+        t.assert.snapshot?.(JSON.stringify(result));
+        await dialog.dismiss();
       });
     });
   });

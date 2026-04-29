@@ -35,6 +35,12 @@ in the DevTools Elements panel (if any).`,
   },
   handler: async (request, response, context) => {
     context.validatePath(request.params.filePath);
+    const dialog = request.page.getDialog();
+    if (dialog) {
+      throw new Error(
+        `A dialog is open (${dialog.type()}: ${dialog.message()}).`,
+      );
+    }
     response.includeSnapshot({
       verbose: request.params.verbose ?? false,
       filePath: request.params.filePath,
@@ -60,6 +66,12 @@ export const waitFor = definePageTool({
   },
   handler: async (request, response, context) => {
     const page = request.page;
+    const dialog = page.getDialog();
+    if (dialog) {
+      throw new Error(
+        `A dialog is open (${dialog.type()}: ${dialog.message()}).`,
+      );
+    }
     await context.waitForTextOnPage(
       request.params.text,
       request.params.timeout,

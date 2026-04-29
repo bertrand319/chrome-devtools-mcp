@@ -52,6 +52,12 @@ export const screenshot = definePageTool({
   },
   handler: async (request, response, context) => {
     context.validatePath(request.params.filePath);
+    const dialog = request.page.getDialog();
+    if (dialog) {
+      throw new Error(
+        `A dialog is open (${dialog.type()}: ${dialog.message()}).`,
+      );
+    }
     if (request.params.uid && request.params.fullPage) {
       throw new Error('Providing both "uid" and "fullPage" is not allowed.');
     }

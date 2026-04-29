@@ -7,6 +7,8 @@
 import assert from 'node:assert';
 import {describe, it} from 'node:test';
 
+import type {Dialog} from 'puppeteer-core';
+
 import {takeSnapshot, waitFor} from '../../src/tools/snapshot.js';
 import {html, withMcpContext} from '../utils.js';
 
@@ -20,6 +22,34 @@ describe('snapshot', () => {
           context,
         );
         assert.ok(response.includeSnapshot);
+      });
+    });
+
+    it('when dialog is open', async t => {
+      await withMcpContext(async (response, context) => {
+        const page = context.getSelectedPptrPage();
+        await page.setContent('<h1>Test</h1>');
+        const dialogPromise = new Promise<Dialog>(resolve => {
+          page.on('dialog', dialog => {
+            resolve(dialog);
+          });
+        });
+        page.evaluate(() => {
+          alert('test dialog');
+        });
+        const dialog = await dialogPromise;
+
+        await assert.rejects(
+          takeSnapshot.handler(
+            {params: {}, page: context.getSelectedMcpPage()},
+            response,
+            context,
+          ),
+        );
+        const result = await response.handle('take_snapshot', context);
+
+        t.assert.snapshot?.(JSON.stringify(result));
+        await dialog.dismiss();
       });
     });
   });
@@ -187,6 +217,43 @@ describe('snapshot', () => {
           'Element matching one of ["Hello iframe"] found.',
         );
         assert.ok(response.includeSnapshot);
+      });
+    });
+
+    it('when dialog is open', async t => {
+      await withMcpContext(async (response, context) => {
+        const page = context.getSelectedPptrPage();
+        await page.setContent('<h1>Test</h1>');
+
+        const dialogPromise = new Promise<Dialog>(resolve => {
+          page.on('dialog', dialog => {
+            resolve(dialog);
+          });
+        });
+
+        page.evaluate(() => {
+          alert('test dialog');
+        });
+        const dialog = await dialogPromise;
+
+        try {
+          await waitFor.handler(
+            {
+              params: {
+                text: ['Test'],
+              },
+              page: context.getSelectedMcpPage(),
+            },
+            response,
+            context,
+          );
+        } catch {
+          /* empty */
+        }
+
+        const result = await response.handle('wait_for', context);
+        t.assert.snapshot?.(JSON.stringify(result));
+        await dialog.dismiss();
       });
     });
   });

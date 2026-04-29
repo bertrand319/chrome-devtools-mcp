@@ -68,6 +68,12 @@ export const emulate = definePageTool({
   },
   handler: async (request, _response, context) => {
     const page = request.page;
+    const dialog = page.getDialog();
+    if (dialog) {
+      throw new Error(
+        `A dialog is open (${dialog.type()}: ${dialog.message()}).`,
+      );
+    }
     await context.emulate(request.params, page.pptrPage);
   },
 });
