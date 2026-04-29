@@ -89,7 +89,7 @@ export const clickAt = definePageTool({
   annotations: {
     category: ToolCategory.INPUT,
     readOnlyHint: false,
-    conditions: ['computerVision'],
+    conditions: ['experimentalVision'],
   },
   schema: {
     x: zod.number().describe('The x coordinate'),

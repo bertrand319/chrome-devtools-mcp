@@ -29,7 +29,7 @@ export const startScreencast = definePageTool(args => ({
     category: ToolCategory.DEBUGGING,
     readOnlyHint: false,
 
-    conditions: ['screencast'],
+    conditions: ['experimentalScreencast'],
   },
   schema: {
     filePath: zod
@@ -99,7 +99,7 @@ export const stopScreencast = definePageTool({
   annotations: {
     category: ToolCategory.DEBUGGING,
     readOnlyHint: false,
-    conditions: ['screencast'],
+    conditions: ['experimentalScreencast'],
   },
   schema: {},
   handler: async (_request, response, context) => {
